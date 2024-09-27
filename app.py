@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[ ]:
-
-
 pip install pdf2image pillow
-
-
-# In[ ]:
-
+pip install PyMuPDF
 
 import platform
 def get_poppler_path():
@@ -21,17 +14,7 @@ def get_poppler_path():
 
 POPPLER_PATH = get_poppler_path()
 
-
-# In[ ]:
-
-
-pip install PyMuPDF
-
-
 # # Analyze PDF pages and convert to images
-
-# In[ ]:
-
 
 import fitz  # PyMuPDF
 from PIL import Image
@@ -65,8 +48,8 @@ def analyze_and_convert_pdf(pdf_path, output_folder):
     print(f"Converted {len(pages)} pages to images in {output_folder}")
 
 # Usage
-pdf_path = "resilience-chemicals-industry.pdf"
-output_folder = "/Users/dborn/pdf2iamge/"
+pdf_path = "resilience-chemicals-industry.pdf" #example
+output_folder = "YOUR_PATH"
 dimensions = analyze_and_convert_pdf(pdf_path, output_folder)
 
 # Print dimensions of each page
@@ -74,9 +57,7 @@ for i, dim in enumerate(dimensions):
     print(f"Page {i+1} dimensions: {dim[0]}x{dim[1]} points")
 
 
-# # Create grid overal
-
-# In[ ]:
+# # Create grid overlay
 
 
 def create_grid_overlay(width, height, num_rows, num_cols):
@@ -122,8 +103,6 @@ for page_num, (width, height) in enumerate(dimensions):
 
 # # Enhanced PDF Content Detection (Text and Brightness)
 # scans for text and images blocks
-
-# In[ ]:
 
 
 import fitz  # PyMuPDF
@@ -182,9 +161,6 @@ print(grid_with_content)
 
 # # Visualize Grid Squares with Text
 
-# In[181]:
-
-
 from PIL import Image, ImageDraw
 
 
@@ -225,22 +201,12 @@ image_path = "/Users/dborn/pdf2iamge/page_1.png"
 output_path = "/Users/dborn/pdf2iamge/"
 visualize_content_grid(image_path, grid_with_content, output_path)
 
-
-# In[ ]:
-
-
-
-
-
 # # Compare Page Structures
 # 
 # We process each page of the PDF as before, creating grid overlays and detecting text.
 # We store the grid information for each page in all_page_grids.
 # After processing all pages, we call compare_page_structures to analyze the similarity of pages based on the number of rows containing text.
 # We write the results of this comparison to a text file in the output folder.
-
-# In[ ]:
-
 
 def compare_page_structures(grids):
     page_structures = []
@@ -282,35 +248,15 @@ def compare_page_structures(grids):
     return page_structures, similar_pages_rows, similar_pages_squares
 
 # Usage example
-page_structures, similar_pages_rows, similar_pages_squares = compare_page_structures(all_page_grids)
-
-
-# 
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
+#page_structures, similar_pages_rows, similar_pages_squares = compare_page_structures(all_page_grids)
 
 
 # # Inlcude OCR
-
-# In[ ]:
-
 
 pip install PyMuPDF Pillow numpy opencv-python-headless pytesseract spellchecker
 
 
 # # High accuracy OCR function
-
-# In[ ]:
-
 
 import pytesseract
 from PIL import Image
@@ -329,7 +275,7 @@ def perform_german_ocr(image, tesseract_path):
     denoised = cv2.fastNlMeansDenoising(binary)
 
     # Perform OCR
-    custom_config = r'--oem 1 --psm 1 -l eng'
+    custom_config = r'--oem 1 --psm 1 -l eng' # uses LLM
     text = pytesseract.image_to_string(image, config=custom_config)  # Change language
     return text
 
@@ -340,20 +286,10 @@ def test_ocr(test_image_path, tesseract_path):
     print("OCR Result:", result)
 
 test_ocr(test_image_path, tesseract_path)
-test_image_path = '/Users/dborn/pdf2iamge/page_5.png'
-tesseract_path = r'/opt/homebrew/bin/tesseract'  # Update this path as per your system
-
-
-# In[ ]:
-
-
-
-
+test_image_path = 'YOUR_PATH'
+tesseract_path = r'/opt/homebrew/bin/tesseract'  # example path
 
 # # Regions of ineterest on the page
-
-# In[ ]:
-
 
 def identify_regions_of_interest(grid):
     roi = []
@@ -380,67 +316,7 @@ def identify_regions_of_interest(grid):
     return roi
 
 
-# In[ ]:
-
-
-import fitz  # PyMuPDF
-from PIL import Image
-import os
-import numpy as np
-
-def process_pdf(pdf_path, output_folder, num_rows, num_cols, brightness_threshold=20):
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
-    pdf_document = fitz.open(pdf_path)
-    all_page_grids = []
-
-    for page_num in range(len(pdf_document)):
-        page = pdf_document[page_num]
-        width, height = page.rect.width, page.rect.height
-
-        grid = create_grid_overlay(width, height, num_rows, num_cols)
-        grid_with_content = detect_content_in_grid(pdf_path, page_num, grid, brightness_threshold)
-        all_page_grids.append(grid_with_content)
-
-        pix = page.get_pixmap()
-        img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-        
-        original_image_path = os.path.join(output_folder, f"page_{page_num + 1}.png")
-        img.save(original_image_path)
-
-        visualized_image_path = os.path.join(output_folder, f"page_{page_num + 1}_visualized.png")
-        visualize_content_grid(original_image_path, grid_with_content, visualized_image_path)
-
-        print(f"Processed page {page_num + 1}")
-
-    pdf_document.close()
-
-   
-        f.write("\nSimilar pages (by rows):\n")
-        for pair in similar_pages_rows:
-            f.write(f"Pages {pair[0]} and {pair[1]} have a similar row structure\n")
-        
-        f.write("\nSimilar pages (by squares):\n")
-        for pair in similar_pages_squares:
-            f.write(f"Pages {pair[0]} and {pair[1]} have a similar square structure\n")
-
-    print(f"Comparison results saved to {results_path}")
-
-#Usage
-pdf_path = "resilience-chemicals-industry.pdf"
-output_folder = "/Users/dborn/pdf2iamge/"
-num_rows = 50
-num_cols = 15
-brightness_threshold = 5  # Adjust this value based on your needs
-
-process_pdf(pdf_path, output_folder, num_rows, num_cols, brightness_threshold)
-
-
 # # Process method
-
-# In[182]:
-
 
 import fitz  # PyMuPDF
 from PIL import Image
@@ -517,61 +393,14 @@ def process_pdf(pdf_path, output_folder, num_rows, num_cols, brightness_threshol
     
     print(f"Comparison results saved to {results_path}")
         
-    
-
-
-# In[184]:
-
 
 # Usage
-pdf_path = "resilience-chemicals-industry.pdf"
-output_folder = "/Users/dborn/pdf2iamge/"
+pdf_path = "resilience-chemicals-industry.pdf" #example
+output_folder = "YOUR_OUTPUT_PATH"
 num_rows = 200
 num_cols = 100
 brightness_threshold = 5
 tesseract_path = r'/opt/homebrew/bin/tesseract'  # Update this path as per your system
 
 process_pdf(pdf_path, output_folder, num_rows, num_cols, brightness_threshold)
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
 
